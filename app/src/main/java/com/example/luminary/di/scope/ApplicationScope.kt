@@ -1,0 +1,8 @@
+package com.example.luminary.di.scope
+
+import javax.inject.Scope
+
+
+@Scope
+@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
+annotation class ApplicationScope
