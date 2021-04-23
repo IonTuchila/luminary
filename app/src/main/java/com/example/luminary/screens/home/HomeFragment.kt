@@ -1,76 +1,69 @@
 package com.example.luminary.screens.home
 
-import android.app.Activity
-import android.content.Context
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.observe
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.luminary.LuminaryApp
-import com.example.luminary.R
-import com.example.luminary.database.ProjectRoomDatabase
-import com.example.luminary.database.UserDAO
-import com.example.luminary.net.models.User
-import com.example.luminary.net.response.UserResponse
-import com.example.luminary.screens.home.mvp.HomePresenter
-import com.example.luminary.screens.home.mvp.HomeView
-import kotlinx.android.synthetic.main.fragment_home.*
-import javax.inject.Inject
+import com.example.luminary.databinding.FragmentHomeBinding
+import com.example.luminary.repository.HomeRepository
+import com.example.luminary.util.Injector
+import com.example.luminary.viewModel.HomeViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 
-class HomeFragment : Fragment(R.layout.fragment_home), HomeView {
+@Suppress("DEPRECATION")
+class HomeFragment : Fragment() {
 
-    @Inject
-    lateinit var presenter: HomePresenter
     private lateinit var adapter: HomeAdapter
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        (activity?.application as LuminaryApp).component.inject(this)
-        presenter.injectView(this)
-
+    lateinit var binding: FragmentHomeBinding
+    private val viewModel: HomeViewModel by viewModels {
+        Injector.providePlantListViewModelFactory(requireContext())
     }
 
-    override fun setData(users: List<User>) {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        binding = FragmentHomeBinding.inflate(inflater, container, false)
+        context ?: return binding.root
+        setupRecycler()
+
+        return binding.root
+    }
+
+    private fun subscribeUi(adapter: HomeAdapter) {
+        viewModel.usersUsingFlow.observe(viewLifecycleOwner) { users ->
+            adapter.submitList(users)
+            binding.swipeToRefresh.isRefreshing = false
+        }
+    }
+
+    @FlowPreview
+    @ExperimentalCoroutinesApi
+    private fun setupRecycler() {
         adapter = HomeAdapter {
             Toast.makeText(context, "Clicked", Toast.LENGTH_LONG).show()
         }
-        recycler.adapter = adapter
-        adapter.submitList(users)
-    }
 
-    override fun setOnFail(msg: String) {
-        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val db = context?.let { ProjectRoomDatabase.getDatabase(it) }
-        dao = db?.userAccountDao()
-        setupRecycler()
-        presenter.getUsers()
-    }
-
-    private fun setupRecycler() {
-        recycler.apply {
+        binding.recycler.adapter = adapter
+        binding.recycler.apply {
             this.layoutManager = LinearLayoutManager(this.context)
             itemAnimator = DefaultItemAnimator()
         }
-    }
 
-    /**
-     * Called when the Fragment is no longer started.  This is generally
-     * tied to [Activity.onStop] of the containing
-     * Activity's lifecycle.
-     */
-    override fun onStop() {
-        super.onStop()
-        presenter.onStop()
+        subscribeUi(adapter)
+        binding.swipeToRefresh.setOnRefreshListener {
+            viewModel.deleteAllUsers()
+        }
     }
-
-    companion object{
-        var dao : UserDAO? = null
-    }
-
 }
+

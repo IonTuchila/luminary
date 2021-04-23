@@ -21,7 +21,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@{user.name.last + user.name.first}"
+            android:text="@{user.name.first + ' '+ user.name.last}"
             android:textColor="@color/black"
             android:textSize="14dp"
             android:layout_gravity="center_vertical"

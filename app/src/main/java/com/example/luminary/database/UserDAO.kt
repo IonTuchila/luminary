@@ -2,22 +2,21 @@ package com.example.luminary.database
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.luminary.net.models.User
-import com.example.luminary.net.response.UserResponse
-
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDAO {
 
-    @Query("SELECT * FROM UserResponse")
-    fun getAll(): UserResponse
+    @Query("SELECT * from users")
+    fun getAll(): Flow<List<User>>
 
-
-    @Query("DELETE FROM UserResponse")
+    @Query("DELETE from users")
     fun clear()
 
-    @Insert
-    fun insertAll(vararg  userResponse: UserResponse)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(users: List<User>?)
 
 }
