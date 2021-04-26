@@ -62,7 +62,7 @@ class HomeFragment : Fragment() {
 
         subscribeUi(adapter)
         binding.swipeToRefresh.setOnRefreshListener {
-            viewModel.deleteAllUsers()
+            viewModel.fetch()
         }
     }
 }

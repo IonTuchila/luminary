@@ -1,3 +1,7 @@
+
+
+
+
 package com.example.luminary.viewModel
 
 import androidx.lifecycle.LiveData
@@ -25,16 +29,13 @@ class HomeViewModel internal constructor(
         userRepository.usersFlow
     }.asLiveData()
 
-    fun deleteAllUsers() {
-        userRepository.deleteAllUsers()
-        fetch()
-    }
 
     init {
         fetch()
     }
 
-    private fun fetch() {
+    fun fetch() {
+        userRepository.deleteAllUsers()
         launchDataLoad { userRepository.tryUpdateRecentUsersCache() }
     }
 
